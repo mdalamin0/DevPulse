@@ -1,11 +1,13 @@
 import { title } from "process";
 import { pool } from "../../db";
 import type { Issue } from "./issue.interface";
-import jwt, { type JwtPayload } from "jsonwebtoken";import config from "../../config/env.config";
-
+import jwt, { type JwtPayload } from "jsonwebtoken";
+import config from "../../config/env.config";
+import type { Response } from "express";
+import sendResponse from "../../utility/sendResponse";
 
 const createIssueIntoDB = async (payload: Issue, token: string) => {
-  const { title, description, type, status} = payload;
+  const { title, description, type, status } = payload;
   const decoded = jwt.verify(
     token as string,
     config.secret_key as string,
@@ -48,7 +50,36 @@ const getAllIssuesFromDB = async () => {
   return result;
 };
 
+const getSingleIssueFromDB = async (res: Response, id: string) => {
+  const issueData = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
+  const issue = issueData.rows[0];
+  if (issueData.rows.length === 0) {
+   sendResponse(res,{
+    statusCode: 404,
+    success: false,
+    message: "Issue not found!",
+   })
+  }
+  const userData = await pool.query(`SELECT id, name, role FROM users WHERE id=$1`, [
+    issue.reporter_id,
+  ]);
+  const user = userData.rows[0];
+  
+  const result = {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter: user,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
+  return result;
+};
+
 export const issueService = {
   createIssueIntoDB,
   getAllIssuesFromDB,
+  getSingleIssueFromDB,
 };
