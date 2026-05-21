@@ -1,4 +1,4 @@
-type Role = "admin" | "contributor";
+type Role = "maintainer" | "contributor";
 
 export type User = {
   name: string;
