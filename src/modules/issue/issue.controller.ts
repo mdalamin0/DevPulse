@@ -3,8 +3,10 @@ import sendResponse from "../../utility/sendResponse";
 import { issueService } from "./issue.service";
 
 const createIssue = async(req: Request, res: Response) => {
+  // const user = req.user;
+  const token = req.headers.authorization;
   try {
-    const result = await issueService.createIssueIntoDB(req.body)
+    const result = await issueService.createIssueIntoDB(req.body, token as string)
     sendResponse(res, {
       statusCode: 201,
       success: true,
@@ -45,3 +47,4 @@ export const issueController = {
   createIssue,
   getAllIssues,
 }
+

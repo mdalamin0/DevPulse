@@ -7,8 +7,9 @@ import {Pool} from "pg";
 import config from "./config/env.config";
 import { userRouter } from "./modules/auth/auth.route";
 import { issueRoter } from "./modules/issue/issue.route";
+import globalErrorHanlder from "./middleware/globalErrorHanlder";
 
-export const app: Application = express();
+const app: Application = express();
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {
@@ -21,12 +22,6 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", userRouter);
 app.use("/api/issues", issueRoter);
 
-// app.use((err, req, res, next) => {
-//   console.error(err.stack); // Log the error
+app.use(globalErrorHanlder);
 
-//   res.status(500).json({
-//     success: false,
-//     message: err.message || "Internal Server Error",
-//   });
-// });
-
+export default app;

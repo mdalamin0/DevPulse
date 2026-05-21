@@ -1,11 +1,18 @@
 import { title } from "process";
 import { pool } from "../../db";
 import type { Issue } from "./issue.interface";
+import jwt, { type JwtPayload } from "jsonwebtoken";import config from "../../config/env.config";
 
-const createIssueIntoDB = async (payload: Issue) => {
-  const { title, description, type, status, reporter_id } = payload;
+
+const createIssueIntoDB = async (payload: Issue, token: string) => {
+  const { title, description, type, status} = payload;
+  const decoded = jwt.verify(
+    token as string,
+    config.secret_key as string,
+  ) as JwtPayload;
+  // console.log("from issu service: ", decoded.id);
   const user = await pool.query(`SELECT * FROM users WHERE id=$1`, [
-    reporter_id,
+    decoded.id,
   ]);
   if (user.rows.length === 0) {
     throw new Error("User not found!");
@@ -14,7 +21,7 @@ const createIssueIntoDB = async (payload: Issue) => {
     `
       INSERT INTO issues(title, description, type, status, reporter_id) VALUES($1, $2, $3, COALESCE($4, 'open'), $5) RETURNING *
       `,
-    [title, description, type, status, reporter_id],
+    [title, description, type, status, decoded.id],
   );
   return result;
 };
