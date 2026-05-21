@@ -5,7 +5,7 @@ import express, {
 } from "express";
 import {Pool} from "pg";
 import config from "./config/env.config";
-import { userRouter } from "./modules/user/user.route";
+import { userRouter } from "./modules/auth/auth.route";
 import { issueRoter } from "./modules/issue/issue.route";
 
 export const app: Application = express();
