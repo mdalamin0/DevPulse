@@ -8,3 +8,4 @@ export type Issue = {
   status?: Status;
   reporter_id?: number;
 };
+

@@ -3,7 +3,7 @@ import sendResponse from "../utility/sendResponse";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import config from "../config/env.config";
 import { pool } from "../db";
-import type { Role } from "../types";
+import type { JwtUser, Role } from "../types";
 
 const auth = (...roles: Role[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -28,7 +28,6 @@ const auth = (...roles: Role[]) => {
         [decoded.id],
       );
       
-      const user = userData.rows[0];
       if (userData.rows.length === 0) {
         sendResponse(res, {
           statusCode: 404,
@@ -36,16 +35,14 @@ const auth = (...roles: Role[]) => {
           message: "User not found!",
         });
       }
-       if (roles.length && !roles.includes(user.role)) {
-         console.log("from if condition: ", user);
+       if (roles.length && !roles.includes(decoded.role)) {
          res.status(403).json({
            success: false,
            message: "Forbidden!! This role have no access!",
          });
          return;
        }
-       console.log("from decode: ",decoded.role);
-       req.user = decoded;
+       req.user = decoded as JwtUser;
       next();
     } catch (error) {
       next(error);

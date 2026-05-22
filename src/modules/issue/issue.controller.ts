@@ -3,12 +3,9 @@ import sendResponse from "../../utility/sendResponse";
 import { issueService } from "./issue.service";
 
 const createIssue = async (req: Request, res: Response) => {
-  const {id} = req.user;
+  const user = req.user!;
   try {
-    const result = await issueService.createIssueIntoDB(
-      req.body,
-      id as string,
-    );
+    const result = await issueService.createIssueIntoDB(req.body, user);
     sendResponse(res, {
       statusCode: 201,
       success: true,
@@ -64,12 +61,12 @@ const getSingleIssue = async (req: Request, res: Response) => {
   }
 };
 
-const deleteIssue = async(req: Request, res: Response) => {
-  const {id} = req.params;
-  console.log("from issu controller: ",req.user);
+const deleteIssue = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log("from issu controller: ", req.user);
   try {
     const result = await issueService.deleteIssue(id as string);
-    if(result.rowCount === 0){
+    if (result.rowCount === 0) {
       sendResponse(res, {
         statusCode: 404,
         success: false,
@@ -89,17 +86,24 @@ const deleteIssue = async(req: Request, res: Response) => {
       error: error,
     });
   }
-}
+};
 
 const updateIssue = async (req: Request, res: Response) => {
-  const {id} = req.params;
+  const { id } = req.params;
+  const user = req.user!;
   try {
-    const result = await issueService.updateIssueIntoDB(req.body, id as string)
-     sendResponse(res, {
-       statusCode: 200,
-       success: true,
-       message: "Issue updated successfully",
-     });
+    const result = await issueService.updateIssueIntoDB(
+      req.body,
+      id as string,
+      user,
+    );
+    console.log(result);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue updated successfully",
+      data: result.rows[0],
+    });
   } catch (error: any) {
     sendResponse(res, {
       statusCode: 500,
@@ -115,5 +119,5 @@ export const issueController = {
   getAllIssues,
   getSingleIssue,
   updateIssue,
-  deleteIssue
+  deleteIssue,
 };

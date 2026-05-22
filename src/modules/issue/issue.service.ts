@@ -5,20 +5,19 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import config from "../../config/env.config";
 import type { Response } from "express";
 import sendResponse from "../../utility/sendResponse";
+import type { JwtUser } from "../../types";
 
-const createIssueIntoDB = async (payload: Issue, id: string) => {
+const createIssueIntoDB = async (payload: Issue, user: JwtUser) => {
   const { title, description, type, status } = payload;
-  const user = await pool.query(`SELECT * FROM users WHERE id=$1`, [
-    id,
-  ]);
-  if (user.rows.length === 0) {
+  const userData = await pool.query(`SELECT * FROM users WHERE id=$1`, [user.id]);
+  if (userData.rows.length === 0) {
     throw new Error("User not found!");
   }
   const result = await pool.query(
     `
       INSERT INTO issues(title, description, type, status, reporter_id) VALUES($1, $2, $3, COALESCE($4, 'open'), $5) RETURNING *
       `,
-    [title, description, type, status, id],
+    [title, description, type, status, user.id],
   );
   return result;
 };
@@ -49,17 +48,18 @@ const getSingleIssueFromDB = async (res: Response, id: string) => {
   const issueData = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
   const issue = issueData.rows[0];
   if (issueData.rows.length === 0) {
-   sendResponse(res,{
-    statusCode: 404,
-    success: false,
-    message: "Issue not found!",
-   })
+    sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Issue not found!",
+    });
   }
-  const userData = await pool.query(`SELECT id, name, role FROM users WHERE id=$1`, [
-    issue.reporter_id,
-  ]);
+  const userData = await pool.query(
+    `SELECT id, name, role FROM users WHERE id=$1`,
+    [issue.reporter_id],
+  );
   const user = userData.rows[0];
-  
+
   const result = {
     id: issue.id,
     title: issue.title,
@@ -73,21 +73,65 @@ const getSingleIssueFromDB = async (res: Response, id: string) => {
   return result;
 };
 
-const updateIssueIntoDB = async(payload: Issue, id: string) => {
-const {title, description, type} = payload
-console.log(id, payload);
-}
+const updateIssueIntoDB = async (
+  payload: Partial<Issue>,
+  id: string,
+  user: JwtUser,
+) => {
+  // payload= data from req.body
+  const { title, description, type, status } = payload;
+  // user=decoded user recive from req.user
+  const {id: userId, role } = user;
+  const issueData = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
+  const issue = issueData.rows[0];
+  if (role === "maintainer") {
+    const result = await pool.query(
+      `
+    UPDATE issues SET
+    title = COALESCE($1, title),
+    description = COALESCE($2, description),
+    type = COALESCE($3, type),
+    status = COALESCE($4, status),
+    updated_at = CURRENT_TIMESTAMP
+    WHERE id = $5
+    RETURNING *
+    `,
+      [title, description, type, status, id],
+    );
+    return result;
+  } else if (
+    role === "contributor" &&
+    issue.reporter_id === userId &&
+    issue.status === "open"
+  ) {
+    const result = await pool.query(
+      `
+    UPDATE issues SET
+    title = COALESCE($1, title),
+    description = COALESCE($2, description),
+    type = COALESCE($3, type),
+    updated_at = CURRENT_TIMESTAMP
+    WHERE id = $4
+    RETURNING *
+    `,
+      [title, description, type, id],
+    );
+  
+    return result;
+  } else {
+    throw new Error("Forbidden!");
+  }
+};
 
-const deleteIssue = async(id: string) => {
-const result = await pool.query(`DELETE FROM issues WHERE id=$1`, [id])
-return result;
-}
-
+const deleteIssue = async (id: string) => {
+  const result = await pool.query(`DELETE FROM issues WHERE id=$1`, [id]);
+  return result;
+};
 
 export const issueService = {
   createIssueIntoDB,
   getAllIssuesFromDB,
   getSingleIssueFromDB,
   updateIssueIntoDB,
-  deleteIssue
+  deleteIssue,
 };
