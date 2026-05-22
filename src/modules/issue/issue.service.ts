@@ -6,15 +6,10 @@ import config from "../../config/env.config";
 import type { Response } from "express";
 import sendResponse from "../../utility/sendResponse";
 
-const createIssueIntoDB = async (payload: Issue, token: string) => {
+const createIssueIntoDB = async (payload: Issue, id: string) => {
   const { title, description, type, status } = payload;
-  const decoded = jwt.verify(
-    token as string,
-    config.secret_key as string,
-  ) as JwtPayload;
-  // console.log("from issu service: ", decoded.id);
   const user = await pool.query(`SELECT * FROM users WHERE id=$1`, [
-    decoded.id,
+    id,
   ]);
   if (user.rows.length === 0) {
     throw new Error("User not found!");
@@ -23,7 +18,7 @@ const createIssueIntoDB = async (payload: Issue, token: string) => {
     `
       INSERT INTO issues(title, description, type, status, reporter_id) VALUES($1, $2, $3, COALESCE($4, 'open'), $5) RETURNING *
       `,
-    [title, description, type, status, decoded.id],
+    [title, description, type, status, id],
   );
   return result;
 };
@@ -78,14 +73,21 @@ const getSingleIssueFromDB = async (res: Response, id: string) => {
   return result;
 };
 
+const updateIssueIntoDB = async(payload: Issue, id: string) => {
+const {title, description, type} = payload
+console.log(id, payload);
+}
+
 const deleteIssue = async(id: string) => {
 const result = await pool.query(`DELETE FROM issues WHERE id=$1`, [id])
 return result;
 }
 
+
 export const issueService = {
   createIssueIntoDB,
   getAllIssuesFromDB,
   getSingleIssueFromDB,
+  updateIssueIntoDB,
   deleteIssue
 };

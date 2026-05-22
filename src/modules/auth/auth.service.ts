@@ -30,7 +30,7 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
   const matchPassword = await bcrypt.compare(password, user.password);
 
   if (!matchPassword) {
-    throw new Error("Invalid credential!");
+    throw new Error("Invalid credential! Password don't match!");
   }
   // genarate token
   const jwtpayload = {

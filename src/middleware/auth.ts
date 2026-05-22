@@ -37,11 +37,14 @@ const auth = (...roles: Role[]) => {
         });
       }
        if (roles.length && !roles.includes(user.role)) {
+         console.log("from if condition: ", user);
          res.status(403).json({
            success: false,
            message: "Forbidden!! This role have no access!",
          });
+         return;
        }
+       console.log("from decode: ",decoded.role);
        req.user = decoded;
       next();
     } catch (error) {

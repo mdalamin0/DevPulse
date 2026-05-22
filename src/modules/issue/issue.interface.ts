@@ -5,6 +5,6 @@ export type Issue = {
   title: string;
   description: string;
   type: Type;
-  status: Status;
-  reporter_id: number;
+  status?: Status;
+  reporter_id?: number;
 };
