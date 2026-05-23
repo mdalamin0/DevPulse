@@ -1,8 +1,5 @@
-import { title } from "process";
 import { pool } from "../../db";
 import type { Issue } from "./issue.interface";
-import jwt, { type JwtPayload } from "jsonwebtoken";
-import config from "../../config/env.config";
 import type { Response } from "express";
 import sendResponse from "../../utility/sendResponse";
 import type { JwtUser } from "../../types";

@@ -3,8 +3,6 @@ import express, {
   type Request,
   type Response,
 } from "express";
-import {Pool} from "pg";
-import config from "./config/env.config";
 import { userRouter } from "./modules/auth/auth.route";
 import { issueRoter } from "./modules/issue/issue.route";
 import globalErrorHanlder from "./middleware/globalErrorHanlder";
