@@ -41,15 +41,11 @@ const getAllIssuesFromDB = async () => {
   return result;
 };
 
-const getSingleIssueFromDB = async (res: Response, id: string) => {
+const getSingleIssueFromDB = async ( id: string) => {
   const issueData = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
   const issue = issueData.rows[0];
   if (issueData.rows.length === 0) {
-    sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "Issue not found!",
-    });
+   throw new Error("Issue not found!")
   }
   const userData = await pool.query(
     `SELECT id, name, role FROM users WHERE id=$1`,
@@ -75,9 +71,9 @@ const updateIssueIntoDB = async (
   id: string,
   user: JwtUser,
 ) => {
-  // payload= data from req.body
+ 
   const { title, description, type, status } = payload;
-  // user=decoded user recive from req.user
+
   const {id: userId, role } = user;
   const issueData = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
   const issue = issueData.rows[0];
@@ -107,11 +103,12 @@ const updateIssueIntoDB = async (
     title = COALESCE($1, title),
     description = COALESCE($2, description),
     type = COALESCE($3, type),
+    status = COALESCE($4, status),
     updated_at = CURRENT_TIMESTAMP
-    WHERE id = $4
+    WHERE id = $5
     RETURNING *
     `,
-      [title, description, type, id],
+      [title, description, type,status, id],
     );
   
     return result;

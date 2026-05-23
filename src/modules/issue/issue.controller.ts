@@ -44,7 +44,7 @@ const getAllIssues = async (req: Request, res: Response) => {
 const getSingleIssue = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    const result = await issueService.getSingleIssueFromDB(res, id as string);
+    const result = await issueService.getSingleIssueFromDB(id as string);
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -63,7 +63,7 @@ const getSingleIssue = async (req: Request, res: Response) => {
 
 const deleteIssue = async (req: Request, res: Response) => {
   const { id } = req.params;
-  console.log("from issu controller: ", req.user);
+ 
   try {
     const result = await issueService.deleteIssue(id as string);
     if (result.rowCount === 0) {
@@ -97,7 +97,7 @@ const updateIssue = async (req: Request, res: Response) => {
       id as string,
       user,
     );
-    console.log(result);
+  
     sendResponse(res, {
       statusCode: 200,
       success: true,
