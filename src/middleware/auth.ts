@@ -27,7 +27,7 @@ const auth = (...roles: Role[]) => {
     `,
         [decoded.id],
       );
-      
+      const user = userData.rows[0];
       if (userData.rows.length === 0) {
         sendResponse(res, {
           statusCode: 404,
@@ -35,7 +35,7 @@ const auth = (...roles: Role[]) => {
           message: "User not found!",
         });
       }
-       if (roles.length && !roles.includes(decoded.role)) {
+       if (roles.length && !roles.includes(user.role)) {
          res.status(403).json({
            success: false,
            message: "Forbidden!! This role have no access!",
